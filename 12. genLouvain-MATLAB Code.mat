@@ -1,0 +1,56 @@
+A = csvread('AAL90-AverageofCoANs-FA5,6,7,8,9,10,11,12-Matrix.csv');
+NewA = abs( A );
+modularity = [];
+ivals = 0.1:0.02:1;
+ni = length(ivals);
+for K = 1 : ni
+    Communities = [];
+    gamma = ivals(K);
+    fprintf('%i\n', gamma)
+    k = full(sum(NewA));
+    twom = sum(k);
+  for C = 1 : 25 
+    B = full(NewA - gamma*k'*k/twom);
+    [Cx,Q1] = genlouvain(B);
+    fprintf('%i, %d\n', gamma, unique(Cx))
+    Qnew = Q1/twom
+    Communities = horzcat(Communities,Cx);
+    modularity1 = horzcat(gamma, Qnew);
+    modularity = vertcat(modularity,modularity1)
+  end
+ 
+ [VIn, MIn] = partition_distance(Communities);
+ filename = sprintf('ForFindingGamma/NMI/NMI-[%d].csv',gamma);
+ csvwrite(filename,MIn);
+ filename1 = sprintf('ForFindingGamma/VI/VI-[%d].csv',gamma);
+ csvwrite(filename1,VIn);
+
+end 
+
+ filename2 = sprintf('ForFindingGamma/Q-Modularity.csv');
+ csvwrite(filename2,modularity);
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  With the identified gamma %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+A = csvread('AAL90-AverageofCoANs-FA5,6,7,8,9,10,11,12-Matrix.csv');
+Q = [];
+modularity = [];
+gamma = 0.2 
+for K = 1 : 1000
+  Communities = [];
+   k = full(sum(A));
+   twom = sum(k);
+   B = full(A - gamma*((k'*k)/twom));
+   [Cx,Q1] = genlouvain(B);
+   fprintf('%i, %d\n', gamma, unique(Cx))
+   Qnew = Q1/twom;
+   Communities = horzcat(Communities,Cx);
+   modularity1 = horzcat(K, Qnew);
+   modularity = vertcat(modularity,modularity1);
+   filename = sprintf('FixedGamma-Communities/Communities-[%d].csv',K);
+   csvwrite(filename,Communities);
+ end   
+filename1 = sprintf('FixedGamma-Communities/Modularity_(Q).csv');
+csvwrite(filename1,modularity);
